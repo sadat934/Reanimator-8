@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Reanimator: CHIP-8 emulator</title>
+    <style>
+      body { background: #050a06; color: #9fe8b0; font-family: ui-monospace, Consolas, monospace; margin: 0; padding: 1.5rem; }
+      h1 { font-size: 1.1rem; margin: 0 0 0.5rem; }
+      #screen { width: 640px; max-width: 100%; aspect-ratio: 2 / 1; image-rendering: pixelated; background: #001a08; border: 2px solid #1d5c33; display: block; }
+      #status { margin: 0.75rem 0; white-space: pre-wrap; min-height: 1.5em; }
+      table { border-collapse: collapse; margin-top: 0.5rem; }
+      td { border: 1px solid #1d5c33; padding: 0.25rem 0.6rem; text-align: center; }
+      p { max-width: 40rem; }
+    </style>
+  </head>
+  <body>
+    <h1>The Reanimator: CHIP-8 emulator</h1>
+    <p>Test ROM: click the page, then press a mapped key. The key's hex digit is drawn after you release it.</p>
+    <canvas id="screen" width="64" height="32" aria-label="CHIP-8 display"></canvas>
+    <div id="status" role="status" aria-live="polite"></div>
+    <table aria-label="Keyboard mapping">
+      <caption>Keyboard mapping (CHIP-8 key = keyboard key)</caption>
+      <tr><td>1 = 1</td><td>2 = 2</td><td>3 = 3</td><td>C = 4</td></tr>
+      <tr><td>4 = Q</td><td>5 = W</td><td>6 = E</td><td>D = R</td></tr>
+      <tr><td>7 = A</td><td>8 = S</td><td>9 = D</td><td>E = F</td></tr>
+      <tr><td>A = Z</td><td>0 = X</td><td>B = C</td><td>F = V</td></tr>
+    </table>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
