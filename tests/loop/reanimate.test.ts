@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { AllProvidersFailedError } from '../../src/llm';
+import { AllProvidersFailedError, createProviderChain } from '../../src/llm';
 import {
   MAX_USER_CHARS,
   buildSystemPrompt,
@@ -220,5 +220,19 @@ describe('stripFences', () => {
   });
   it('handles an unclosed fence and CRLF', () => {
     expect(stripFences('```octo\r\n: main\r\n  loop')).toBe(': main\n  loop');
+  });
+});
+
+describe('real chain with the offline mock as last link', () => {
+  it('labels the mock result honestly and never says it was generated just now', async () => {
+    const r = await reanimate('a ball', { provider: createProviderChain({}) });
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.provider).toBe('mock');
+    expect(r.offline).toBe(true);
+    expect(r.origin).toBe(OFFLINE_NOTICE);
+    const text = r.log.map((e) => e.message).join('\n');
+    expect(text).toContain('offline stand-in, not generated just now');
+    expect(text).not.toContain('generated just now by');
   });
 });

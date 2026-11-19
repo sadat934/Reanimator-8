@@ -19,4 +19,4 @@ Source: `reanimator.md` sections 2, 7, 8, 13.
 
 ## Acceptance criteria
 - AC1: `npm install`, `npx tsc --noEmit`, `npx vitest run`, `npm run build` pass.
-- AC2: tests cover success on attempt 1, compile-error repair, harness-fail repair, 3 failures, sanitization, fence stripping, progress log and mock labeling.
+- AC2: tests (including the real chain with no keys, served by the mock) cover success on attempt 1, compile-error repair, harness-fail repair, 3 failures, sanitization, fence stripping, progress log and mock labeling.

@@ -23,5 +23,5 @@ provider throws -> failure at once (retrying cannot help)
 - Progress is a callback plus the same events in `log`. An async iterator can wrap it later for `api/generate.ts`.
 - The user text is wrapped in `<<<REQUEST ... REQUEST>>>` markers inside the user message and described as data. The system prompt has no user text.
 - The result carries `offline` and `origin` so the UI can label the game honestly.
-- No mock provider was added to `src/llm` (spec 3 decision stands). The loop only handles one if it appears.
+- Spec 3 now ends its chain with an offline mock (`provider: "mock"`, `offline: true`). The loop labels it from the real flag, and a test runs the real chain with no keys to check the log says "offline stand-in, not generated just now".
 - The repair message always asks for the full program, not a patch.

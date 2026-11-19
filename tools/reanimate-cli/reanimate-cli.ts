@@ -16,7 +16,7 @@ if (prompt === '') {
 
 const chain = createProviderChain(process.env);
 if (chain.providers.length === 0) {
-  console.error('No usable provider. Copy .env.example to .env and set a key plus its *_MODEL.');
+  console.error('No live provider configured (set a key plus its *_MODEL in .env). Only the offline stand-in is available.');
 }
 
 const result = await reanimate(prompt, {

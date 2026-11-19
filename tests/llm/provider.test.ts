@@ -1,5 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { AllProvidersFailedError, createProviderChain, GHOST_RESTING_MESSAGE } from '../../src/llm';
+import { MOCK_PROVIDER_NAME, MOCK_SOURCE } from '../../src/llm/mock';
+import { compile } from '../../src/compiler/compile';
+import { runHeadless } from '../../src/harness/headless';
 import type { FetchLike } from '../../src/llm';
 import { GEMINI_BASE_URL } from '../../src/llm/gemini';
 import { MISTRAL_URL } from '../../src/llm/mistral';
@@ -215,6 +218,15 @@ describe('keys, models and ordering', () => {
   });
 });
 
+/** A mock link that cannot serve, to test the case where even the stand-in fails. */
+const BROKEN_MOCK = {
+  name: 'mock',
+  offline: true,
+  generate: async (): Promise<string> => {
+    throw new Error('mock unavailable');
+  },
+};
+
 describe('total failure', () => {
   it('throws the typed error with the friendly message and the failure list', async () => {
     const f = routedFetch({
@@ -222,7 +234,7 @@ describe('total failure', () => {
       mistral: () => json(500, 'oops'),
       groq: () => json(401, 'bad key'),
     });
-    const err = await createProviderChain(FULL_ENV, { fetchFn: f }).generate(INPUT).catch((e: unknown) => e);
+    const err = await createProviderChain(FULL_ENV, { fetchFn: f, mockProvider: BROKEN_MOCK }).generate(INPUT).catch((e: unknown) => e);
     expect(err).toBeInstanceOf(AllProvidersFailedError);
     const e = err as AllProvidersFailedError;
     expect(e.message).toBe('The ghost is resting. Try the gallery.');
@@ -231,15 +243,16 @@ describe('total failure', () => {
       ['gemini', 429, true],
       ['mistral', 500, false],
       ['groq', 401, false],
+      ['mock', undefined, false],
     ]);
   });
 
   it('with no keys at all it throws the same error, lists the skips, and never calls fetch', async () => {
     const f = routedFetch({});
-    const err = (await createProviderChain({}, { fetchFn: f }).generate(INPUT).catch((e: unknown) => e)) as AllProvidersFailedError;
+    const err = (await createProviderChain({}, { fetchFn: f, mockProvider: BROKEN_MOCK }).generate(INPUT).catch((e: unknown) => e)) as AllProvidersFailedError;
     expect(err).toBeInstanceOf(AllProvidersFailedError);
     expect(err.message).toBe(GHOST_RESTING_MESSAGE);
-    expect(err.failures).toEqual([]);
+    expect(err.failures.map((x) => x.provider)).toEqual(['mock']);
     expect(err.skipped.map((s) => s.reason)).toEqual([
       'GEMINI_API_KEY is not set',
       'MISTRAL_API_KEY is not set',
@@ -248,9 +261,49 @@ describe('total failure', () => {
     expect(f).not.toHaveBeenCalled();
   });
 
-  it('never returns canned text: a failing chain has no success value', async () => {
+  it('when even the mock cannot serve, there is no success value', async () => {
     const f = routedFetch({ gemini: () => json(500, 'x'), mistral: () => json(500, 'x'), groq: () => json(500, 'x') });
-    await expect(createProviderChain(FULL_ENV, { fetchFn: f }).generate(INPUT)).rejects.toBeInstanceOf(AllProvidersFailedError);
+    await expect(createProviderChain(FULL_ENV, { fetchFn: f, mockProvider: BROKEN_MOCK }).generate(INPUT)).rejects.toBeInstanceOf(AllProvidersFailedError);
+  });
+});
+
+describe('offline mock (last link)', () => {
+  const allFail = () =>
+    routedFetch({ gemini: () => json(429, 'quota'), mistral: () => json(500, 'oops'), groq: () => json(401, 'bad key') });
+
+  it('serves and is flagged when every real provider fails', async () => {
+    const r = await createProviderChain(FULL_ENV, { fetchFn: allFail() }).generate(INPUT);
+    expect(r.provider).toBe(MOCK_PROVIDER_NAME);
+    expect(r.offline).toBe(true);
+    expect(r.text).toBe(MOCK_SOURCE);
+    expect(r.failures.map((x) => x.provider)).toEqual(['gemini', 'mistral', 'groq']);
+  });
+
+  it('serves and is flagged when there are no keys, without calling fetch', async () => {
+    const f = routedFetch({});
+    const r = await createProviderChain({}, { fetchFn: f }).generate(INPUT);
+    expect(r.provider).toBe('mock');
+    expect(r.offline).toBe(true);
+    expect(r.skipped).toHaveLength(3);
+    expect(f).not.toHaveBeenCalled();
+  });
+
+  it('is not used and not flagged when a real provider succeeds', async () => {
+    const f = routedFetch({ gemini: () => json(200, geminiOk('real')) });
+    const r = await createProviderChain(FULL_ENV, { fetchFn: f }).generate(INPUT);
+    expect(r.provider).toBe('gemini');
+    expect(r.offline).toBe(false);
+    expect(r.text).toBe('real');
+  });
+
+  it('is not listed among the real providers', () => {
+    expect(createProviderChain({}).providers).toEqual([]);
+  });
+
+  it('source compiles and passes the harness', () => {
+    const c = compile(MOCK_SOURCE);
+    expect(c.ok).toBe(true);
+    if (c.ok) expect(runHeadless(c.rom).passed).toBe(true);
   });
 });
 
@@ -263,7 +316,7 @@ describe('secrets never leak', () => {
       },
       groq: () => json(401, `Invalid key ${KEYS.GROQ_API_KEY}`),
     });
-    const err = (await createProviderChain(FULL_ENV, { fetchFn: f }).generate(INPUT).catch((e: unknown) => e)) as AllProvidersFailedError;
+    const err = (await createProviderChain(FULL_ENV, { fetchFn: f, mockProvider: BROKEN_MOCK }).generate(INPUT).catch((e: unknown) => e)) as AllProvidersFailedError;
     const dump = JSON.stringify({ m: err.message, f: err.failures, s: err.skipped, stack: err.stack });
     for (const key of Object.values(KEYS)) expect(dump).not.toContain(key);
     expect(err.failures[0]?.reason).toContain('[redacted]');

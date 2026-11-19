@@ -7,4 +7,5 @@ Commit after each task on `main` with `git -c user.name="sadat934" -c user.email
 - [x] 5. **Manual script** `npm run llm:try` and `.env.example`. _R12_
 - [x] 6. **Update `docs/BUILD_LOG.md`.**
 - [x] 7. **Run the done checks:** `npm install`, `npx tsc --noEmit`, `npx vitest run`, `npm run build`. _AC1_
-- [ ] 8. **Review step.** Review against R1 to R12 and the integrity rules. _All_
+- [x] 8. **Gap fix after review:** offline mock as last chain link (src/llm/mock.ts), tests, docs. _R13_
+- [ ] 9. **Review step.** Review against R1 to R13 and the integrity rules. _All_

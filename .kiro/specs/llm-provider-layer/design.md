@@ -7,6 +7,7 @@ src/llm/http.ts               # postJson: timeout, quota detection, key redactio
 src/llm/gemini.ts             # generateContent request/response
 src/llm/openai-compatible.ts  # shared chat/completions provider
 src/llm/mistral.ts  groq.ts   # thin wrappers with endpoint and token field
+src/llm/mock.ts               # offline stand-in, last link of the chain
 src/llm/provider.ts           # createProviderChain, AllProvidersFailedError
 src/llm/index.ts
 tools/try-llm/                # manual real-key check, bundled by Vite
@@ -23,3 +24,5 @@ The interface stays exactly as in section 6. The chain is a separate object that
 - No default model names in code (free tiers change). `.env.example` lists suggested values.
 - A missing model counts as a failure (visible), a missing key as a skip (expected).
 - No retries within a provider. The 3-attempt loop belongs to spec 4.
+- Gap found after the spec 3 review: the first version shipped real providers only, against the user's request for a mock as the last fallback. Fixed by adding src/llm/mock.ts. createProviderChain always appends it. GenerateSuccess.offline is true only for the mock. providers lists real providers only. ChainOptions.mockProvider swaps the mock in tests.
+- The mock ignores the prompt and returns one fixed program. It never claims to be a model answer: name mock, offline: true.

@@ -1,0 +1,119 @@
+// Offline stand-in provider: the LAST link of the fallback chain (reanimator.md section 6).
+//
+// Integrity: this is NOT an LLM. It ignores the prompt and always returns the same hand-written
+// Octo program (adapted from examples/bounce.8o), so the loop can still compile, test and play
+// something when Gemini, Mistral and Groq all fail or have no key. Everything that carries its
+// answer must say so: provider name "mock" and offline: true. Never present it as generated.
+import type { GenerateInput, LLMProvider } from './types';
+
+export const MOCK_PROVIDER_NAME = 'mock';
+
+/** Plain-language label for UI and logs. */
+export const MOCK_LABEL = 'offline stand-in, not generated just now';
+
+export const MOCK_SOURCE = `# offline stand-in: a ball bounces around the screen; steer a paddle to keep it in play.
+# Hand-written (adapted from examples/bounce.8o). Not produced by a language model.
+# Controls: key 4 (keyboard Q) = left, key 6 (keyboard E) = right.
+:alias bx  v0   # ball x
+:alias by  v1   # ball y
+:alias dx  v2   # ball x direction: 0 = right, 1 = left
+:alias dy  v3   # ball y direction: 0 = down,  1 = up
+:alias px  v4   # paddle x (paddle is 8 wide, drawn at row 30)
+:alias t   v5   # scratch
+:alias one v6   # constant 1, so we can subtract with -=
+:alias py  v7   # paddle y
+: ball
+  0xC0 0xC0
+: paddle
+  0xFF
+# wait for 2 timer ticks (about 30 frames per second)
+: tick
+  t := 2
+  delay := t
+  loop
+    t := delay
+    while t != 0
+  again
+  return
+# draw (or erase, since drawing is XOR) the ball and the paddle
+: draw-all
+  i := ball
+  sprite bx by 2
+  i := paddle
+  sprite px py 1
+  return
+# keys move the paddle 2 pixels per frame
+: move-paddle
+  t := 4
+  if t key begin
+    if px != 0 then px -= one
+    if px != 0 then px -= one
+  end
+  t := 6
+  if t key begin
+    if px != 56 then px += 1
+    if px != 56 then px += 1
+  end
+  return
+# the ball moves one pixel diagonally per frame and bounces off walls
+: move-ball
+  if dx == 0 then bx += 1
+  if dx == 1 then bx -= one
+  if bx == 62 then dx := 1
+  if bx == 0  then dx := 0
+  if dy == 0 then by += 1
+  if dy == 1 then by -= one
+  if by == 0 then dy := 0
+  # the ball's bottom edge reaches the paddle row when by == 28
+  if by == 28 begin
+    if dy == 0 begin
+      # hit if bx+2 >= px (ball right edge is not left of paddle)
+      t := bx
+      t += 2
+      t -= px
+      if vf == 1 begin
+        # and px+8 >= bx (ball left edge is not right of paddle)
+        t := px
+        t += 8
+        t -= bx
+        if vf == 1 then dy := 1
+      end
+    end
+  end
+  # missed the paddle: serve again from the top
+  if by == 30 begin
+    by := 1
+    dy := 0
+  end
+  return
+: main
+  one := 1
+  py := 30
+  bx := 20
+  by := 4
+  dx := 0
+  dy := 0
+  px := 28
+  loop
+    draw-all        # erase old position
+    move-paddle
+    move-ball
+    draw-all        # draw new position
+    tick
+  again
+`;
+
+export interface MockProvider extends LLMProvider {
+  /** Always true: the answer is a canned stand-in, never a live model reply. */
+  readonly offline: true;
+}
+
+export function createMockProvider(): MockProvider {
+  return {
+    name: MOCK_PROVIDER_NAME,
+    offline: true,
+    async generate(_input: GenerateInput): Promise<string> {
+      return MOCK_SOURCE;
+    },
+  };
+}

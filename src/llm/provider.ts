@@ -1,12 +1,14 @@
 // LLM provider interface and fallback chain (reanimator.md section 6). SERVER-SIDE ONLY.
 //
-// Integrity: there is no mock or canned provider here. If no real provider answers, generate()
-// throws AllProvidersFailedError. Callers must never substitute a made-up result.
+// Integrity: the LAST link is an offline mock (./mock). Its result is always flagged offline: true
+// and named 'mock', so callers can label it. If even the mock cannot serve, generate() throws
+// AllProvidersFailedError. Callers must never present a mock result as generated.
 import { loadLLMConfig } from './config';
 import type { Env, ProviderSettings } from './config';
 import { createGeminiProvider } from './gemini';
 import { createGroqProvider } from './groq';
 import { createMistralProvider } from './mistral';
+import { createMockProvider } from './mock';
 import { redact } from './http';
 import { ProviderError } from './types';
 import type { FetchLike, GenerateInput, LLMProvider, ProviderFailure } from './types';
@@ -29,6 +31,8 @@ export interface GenerateSuccess {
   /** Providers that failed before this one, in order, with reasons. */
   failures: ProviderFailure[];
   skipped: SkippedProvider[];
+  /** True when the offline mock served this. The text is a canned stand-in, not an LLM answer. */
+  offline: boolean;
 }
 
 /** Thrown when no provider produced a response. `message` is safe to show to the user. */
@@ -44,7 +48,7 @@ export class AllProvidersFailedError extends Error {
 }
 
 export interface ProviderChain {
-  /** Providers in try order (only those that have a key and a model). */
+  /** Real providers in try order (only those with a key and a model). The offline mock always follows them and is not listed here. */
   readonly providers: readonly LLMProvider[];
   generate(input: GenerateInput): Promise<GenerateSuccess>;
 }
@@ -52,9 +56,11 @@ export interface ProviderChain {
 export interface ChainOptions {
   fetchFn?: FetchLike;
   timeoutMs?: number;
+  /** Replaces the final mock link. For tests only. */
+  mockProvider?: LLMProvider & { offline?: boolean };
 }
 
-type Entry = { name: string; provider?: LLMProvider; failure?: ProviderFailure };
+type Entry = { name: string; provider?: LLMProvider; failure?: ProviderFailure; offline?: boolean };
 
 function build(settings: ProviderSettings, options: ChainOptions): LLMProvider {
   const opts = {
@@ -90,21 +96,24 @@ export function createProviderChain(env: Env, options: ChainOptions = {}): Provi
       entries.push({ name: s.name, provider: build(s, options) });
     }
   }
+  const mock = options.mockProvider ?? createMockProvider();
+  const mockEntry: Entry = { name: mock.name, provider: mock, offline: mock.offline === true };
   const secrets = config.order.map((s) => s.apiKey).filter((k): k is string => Boolean(k));
   const scrub = (text: string) => secrets.reduce((acc, k) => redact(acc, k), text);
 
+  const all = [...entries, mockEntry];
   return {
     providers: entries.flatMap((e) => (e.provider ? [e.provider] : [])),
     async generate(input: GenerateInput): Promise<GenerateSuccess> {
       const failures: ProviderFailure[] = [];
-      for (const entry of entries) {
+      for (const entry of all) {
         if (!entry.provider) {
           failures.push(entry.failure as ProviderFailure);
           continue;
         }
         try {
           const text = await entry.provider.generate(input);
-          return { text, provider: entry.name, failures, skipped: [...skipped] };
+          return { text, provider: entry.name, failures, skipped: [...skipped], offline: entry.offline === true };
         } catch (err) {
           if (err instanceof ProviderError) {
             failures.push({

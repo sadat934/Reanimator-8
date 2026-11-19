@@ -84,3 +84,13 @@ Dated record of what was built, which Kiro features were used, and what was chan
 - Spec (requirements, design, tasks) and steering (reanimator.md sections 7 and 8, octo-cheatsheet.md).
 **Deviations**
 - The task brief mentioned a mock provider at the end of the chain, but spec 3 shipped none (recorded user decision). No mock provider was added. The loop already labels one honestly if it is added later.
+
+## 2026-11-21: gap fix, offline mock as last link of the LLM chain
+**What was found**
+- After the spec 3 review: the user asked for a mock provider as the final fallback when Gemini, Mistral and Groq fail or have no key. Spec 3 shipped without it ("real providers only"), and spec 4 reported finding none. This was a gap, not a decision to drop it.
+**What was fixed**
+- src/llm/mock.ts: hand-written Octo program adapted from examples/bounce.8o, returned for any prompt. createProviderChain always appends it last. Results carry provider "mock" and offline true. Real results carry offline false.
+- The reanimate loop already labeled offline results. It now gets the real flag from the chain, so the log and result say "offline stand-in, not generated just now". Checked by a test using the real chain with no keys.
+- "The ghost is resting. Try the gallery." now appears only when even the mock cannot serve.
+- Tests (mocked fetch only): all providers fail or keyless gives the mock, flagged; a real success does not use it; the mock source compiles and passes the harness; the loop labels it honestly.
+- Specs for llm-provider-layer and reanimate-loop, .env.example and the two CLIs updated. The earlier entries above are left as written.

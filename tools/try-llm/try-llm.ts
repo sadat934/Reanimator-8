@@ -7,12 +7,12 @@ const prompt = process.argv.slice(2).join(' ').trim() || 'Reply with the single 
 const chain = createProviderChain(process.env);
 
 if (chain.providers.length === 0) {
-  console.error('No usable provider. Copy .env.example to .env and set at least one of GEMINI_API_KEY, MISTRAL_API_KEY, GROQ_API_KEY plus its *_MODEL.');
+  console.error('No live provider configured. Only the offline mock is available. Copy .env.example to .env and set at least one of GEMINI_API_KEY, MISTRAL_API_KEY, GROQ_API_KEY plus its *_MODEL.');
 }
 
 try {
   const r = await chain.generate({ system: 'You are a terse assistant.', user: prompt, maxTokens: 64 });
-  console.log(`Served by: ${r.provider}`);
+  console.log(`Served by: ${r.provider}${r.offline ? " (OFFLINE STAND-IN, not a model answer)" : ""}`);
   for (const f of r.failures) console.log(`  failed before: ${f.provider}: ${f.reason}`);
   for (const s of r.skipped) console.log(`  skipped: ${s.provider}: ${s.reason}`);
   console.log(`Response: ${r.text.trim().slice(0, 500)}`);
