@@ -1,0 +1,14 @@
+{
+  "enabled": true,
+  "name": "Run headless tests",
+  "description": "Runs the headless emulator tests whenever a file in examples/ or src/emulator/ is saved.",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": ["examples/**", "src/emulator/**"]
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "npx vitest run tests/emulator"
+  }
+}
