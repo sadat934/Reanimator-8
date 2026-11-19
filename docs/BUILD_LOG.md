@@ -71,3 +71,16 @@ Dated record of what was built, which Kiro features were used, and what was chan
 - No third-party additions, so THIRD_PARTY.md is unchanged. A provider with a key but no model variable is a recorded failure, not a skip.
 **User action**
 - Copy .env.example to .env, add the three API keys and check model names, then run npm run llm:try.
+
+## 2026-11-20: spec 4, reanimate-loop
+**What was built**
+- src/loop/reanimate.ts: generate, compile, headless test, repair, max 3 attempts. Progress events go to a callback and are returned in the result log. Success returns source, ROM, report, attempt count and provider. Failure is honest and suggests a simpler prompt. If no provider answers, the loop stops with the provider message.
+- src/llm/prompt.ts and examples.ts: system prompt (condensed Octo cheat sheet, CHIP-8 limits, design rules, four examples from examples/, output rule), user and repair messages, 200 character sanitizer, defensive fence stripping. User text is only in the user message.
+- Offline labeling: a provider flagged offline (offline true, or a name starting with mock or offline) is reported as "offline stand-in, not generated just now" in the log and result.
+- tools/reanimate-cli and npm run reanimate: runs the loop with keys from a local .env, writes out/<slug>.ch8 and .8o, never prints keys.
+- tests/loop/reanimate.test.ts: scripted fake provider, no network.
+- .kiro/specs/reanimate-loop/: requirements, design, tasks.
+**Kiro features used**
+- Spec (requirements, design, tasks) and steering (reanimator.md sections 7 and 8, octo-cheatsheet.md).
+**Deviations**
+- The task brief mentioned a mock provider at the end of the chain, but spec 3 shipped none (recorded user decision). No mock provider was added. The loop already labels one honestly if it is added later.
