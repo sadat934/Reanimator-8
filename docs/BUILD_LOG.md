@@ -55,3 +55,5 @@ Dated record of what was built, which Kiro features were used, and what was chan
 **Changed by hand / deviations**
 - Added @types/node (dev) for the MCP server. No MCP SDK dependency: only four JSON-RPC methods are needed.
 - Hook command widened from tests/emulator to tests/emulator tests/harness tests/compiler so saving an example runs the example test.
+**Pending (user action)**
+- Registering the MCP server in .kiro/settings/mcp.json is not done: a permission rule blocks writes to .kiro/settings/. The user must create the file (server `chip8`, command `node`, args `tools/mcp-chip8/dist/server.mjs`, run `npm run mcp:build` first). Task 6 in the spec's tasks.md stays unchecked until then.
