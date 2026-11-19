@@ -42,3 +42,16 @@ Dated record of what was built, which Kiro features were used, and what was chan
 - Octo differences that are not quirks, noted in chip8.ts: Octo's call stack is 12 deep (ours 16), and Octo draws a 16x16 sprite for N = 0 (ours draws nothing).
 **Kiro features used**
 - Spec follow-up edits to .kiro/specs/emulator/ (design and requirements) to close the open flag.
+
+## 2026-11-19: spec 2, compiler-and-harness (part 2: harness, examples, MCP, steering)
+**What was built**
+- src/harness/headless.ts: runs a ROM for 300 frames with the 16 scripted keys and returns the section 7 report (crash, non-blank after frame 5, display changed, never drew). Deterministic. Tests use passing and failing ROMs.
+- examples/: four original Octo games (bounce, catch, etch, runner). tests/harness/examples.test.ts compiles each and requires a passing report.
+- tools/mcp-chip8/: local MCP server (stdio JSON-RPC, no SDK) with a compile_and_test(source) tool returning the compile result and harness report. Bundled by Vite (npm run mcp:build, also part of npm run build). Registered for this workspace in .kiro/settings/mcp.json.
+- .kiro/steering/octo-cheatsheet.md: Octo syntax reference in our own words (Octo docs are MIT-licensed, nothing copied). tests/compiler/cheatsheet.test.ts compiles its snippets.
+- .kiro/specs/compiler-and-harness/: requirements, design, tasks.
+**Kiro features used**
+- Spec (requirements, design, tasks), steering (reanimator.md, octo-cheatsheet.md), hook (now runs emulator, harness and compiler tests on saves in examples/ and src/emulator/), MCP (chip8 server).
+**Changed by hand / deviations**
+- Added @types/node (dev) for the MCP server. No MCP SDK dependency: only four JSON-RPC methods are needed.
+- Hook command widened from tests/emulator to tests/emulator tests/harness tests/compiler so saving an example runs the example test.
