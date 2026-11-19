@@ -1,0 +1,99 @@
+# runner.8o - jump over obstacles that scroll toward you.
+# Mechanic: jump arc driven by a frame counter, XOR collision detection through VF.
+# Controls: key 5 (keyboard W) = jump. Hitting an obstacle resets the score.
+
+:alias py    v0   # player y
+:alias air   v1   # 0 = on the ground, 1..24 = frames into a jump
+:alias ox    v2   # obstacle x (moves left by 2 each frame)
+:alias score v3
+:alias t     v4   # scratch
+:alias one   v5   # constant 1
+:alias two   v6   # constant 2
+:alias px    v7   # player x (constant)
+:alias oy    v8   # obstacle y (constant)
+:alias sx    v9   # score x (constant)
+:alias sy    va   # score y (constant)
+
+:const GROUND 22
+
+: player
+  0x3C 0x7E 0xDB 0xFF 0xFF 0x7E 0x66 0xC3
+: obstacle
+  0x30 0x78 0x78 0xFC 0xFC 0xFC
+
+# wait for 1 timer tick (60 per second)
+: tick
+  t := 1
+  delay := t
+  loop
+    t := delay
+    while t != 0
+  again
+  return
+
+: draw-score
+  i := hex score
+  sprite sx sy 5
+  return
+
+: draw-player
+  i := player
+  sprite px py 8
+  return
+
+# VF is 1 afterwards if the obstacle overlapped lit pixels (the player)
+: draw-obstacle
+  i := obstacle
+  sprite ox oy 6
+  return
+
+# one frame of the jump: 12 frames up, 12 frames down
+: update-jump
+  if air != 0 begin
+    if air < 13 then py -= one
+    if air > 12 then py += one
+    air += 1
+    if air == 25 then air := 0
+  end
+  if air == 0 begin
+    t := 5
+    if t key then air := 1
+  end
+  return
+
+: main
+  one := 1
+  two := 2
+  px := 10
+  py := GROUND
+  oy := 24
+  sx := 56
+  sy := 0
+  ox := 56
+  air := 0
+  score := 0
+  draw-score
+  loop
+    draw-player
+    # erase the obstacle where it currently is
+    draw-obstacle
+    update-jump
+    if ox == 0 begin
+      ox := 56
+      draw-score
+      score += 1
+      if score == 10 then score := 0
+      draw-score
+    end
+    ox -= two
+    draw-player
+    draw-obstacle
+    # VF == 1 means the obstacle hit the player: start over
+    if vf == 1 begin
+      draw-score
+      score := 0
+      draw-score
+      ox := 56
+    end
+    tick
+  again

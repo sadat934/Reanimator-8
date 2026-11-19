@@ -1,0 +1,106 @@
+# catch.8o - catch falling blocks in a basket and count the score.
+# Mechanic: random spawns, falling objects, overlap test, score shown with the built-in hex font.
+# Controls: key 4 (keyboard Q) = left, key 6 (keyboard E) = right.
+
+:alias bx    v0   # basket x
+:alias ix    v1   # falling item x
+:alias iy    v2   # falling item y
+:alias score v3
+:alias t     v4   # scratch
+:alias one   v5   # constant 1
+:alias by    v6   # basket y (constant)
+:alias sx    v7   # score x (constant)
+:alias sy    v8   # score y (constant)
+
+: basket
+  0x81 0xFF
+: item
+  0x60 0xF0 0x60
+
+# wait for 1 timer tick (60 per second)
+: tick
+  t := 1
+  delay := t
+  loop
+    t := delay
+    while t != 0
+  again
+  return
+
+# the score is a single digit 0..9, drawn at the top right
+: draw-score
+  i := hex score
+  sprite sx sy 5
+  return
+
+: draw-basket
+  i := basket
+  sprite bx by 2
+  return
+
+: draw-item
+  i := item
+  sprite ix iy 3
+  return
+
+# pick a new random column for the item and restart it at the top
+: spawn
+  ix := random 63
+  if ix > 56 then ix := 56
+  iy := 6
+  return
+
+: move-basket
+  t := 4
+  if t key begin
+    if bx != 0 then bx -= one
+    if bx != 0 then bx -= one
+  end
+  t := 6
+  if t key begin
+    if bx != 56 then bx += 1
+    if bx != 56 then bx += 1
+  end
+  return
+
+# called when the item reaches the basket row: did it land inside?
+: check-catch
+  # item is 4 wide (ix..ix+3), basket is 8 wide (bx..bx+7)
+  t := ix
+  t += 3
+  t -= bx
+  if vf == 1 begin
+    t := bx
+    t += 7
+    t -= ix
+    if vf == 1 begin
+      draw-score
+      score += 1
+      if score == 10 then score := 0
+      draw-score
+    end
+  end
+  return
+
+: main
+  one := 1
+  by := 29
+  sx := 58
+  sy := 0
+  bx := 28
+  score := 0
+  draw-score
+  spawn
+  loop
+    draw-item
+    draw-basket
+    move-basket
+    iy += 1
+    if iy == 26 begin
+      check-catch
+      spawn
+    end
+    draw-basket
+    draw-item
+    tick
+  again

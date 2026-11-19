@@ -1,0 +1,89 @@
+# etch.8o - a tiny drawing toy with a blinking pen.
+# Mechanic: the pen XORs a single pixel every frame (so it blinks) and leaves its mark
+# when it moves. Crossing a mark erases it, which is a side effect of XOR drawing.
+# Controls: key 2 = up, key 8 = down, key 4 = left, key 6 = right, key 0 = clear.
+
+:alias cx   v0   # pen x
+:alias cy   v1   # pen y
+:alias lit  v2   # 1 if the pen has toggled its pixel an odd number of times here
+:alias t    v3   # scratch
+:alias one  v4   # constant 1
+:alias moved v5  # set to 1 when the pen moved this frame
+
+: dot
+  0x80
+
+# wait for 3 timer ticks so the blink is visible and the pen is not too fast
+: tick
+  t := 3
+  delay := t
+  loop
+    t := delay
+    while t != 0
+  again
+  return
+
+# toggle the pixel under the pen and remember the state
+: blink
+  i := dot
+  sprite cx cy 1
+  lit ^= one
+  return
+
+# before leaving a cell, make sure the pixel is left toggled on
+: leave
+  if lit == 0 then blink
+  lit := 0
+  return
+
+: read-keys
+  moved := 0
+  t := 2
+  if t key begin
+    if cy != 0 begin
+      leave
+      cy -= one
+      moved := 1
+    end
+  end
+  t := 8
+  if t key begin
+    if cy != 31 begin
+      leave
+      cy += 1
+      moved := 1
+    end
+  end
+  t := 4
+  if t key begin
+    if cx != 0 begin
+      leave
+      cx -= one
+      moved := 1
+    end
+  end
+  t := 6
+  if t key begin
+    if cx != 63 begin
+      leave
+      cx += 1
+      moved := 1
+    end
+  end
+  t := 0
+  if t key begin
+    clear
+    lit := 0
+  end
+  return
+
+: main
+  one := 1
+  cx := 32
+  cy := 16
+  lit := 0
+  loop
+    blink
+    read-keys
+    tick
+  again
