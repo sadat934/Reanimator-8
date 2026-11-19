@@ -7,7 +7,7 @@ Commit after each task on `main` with `git -c user.name="sadat934" -c user.email
 - [x] 3. **Write the harness** `src/harness/headless.ts` and `tests/harness/headless.test.ts` with a passing and a failing ROM per criterion. _R6 to R9_
 - [x] 4. **Write four original examples** in `examples/` and `tests/harness/examples.test.ts`. _R10_
 - [x] 5. **Write the MCP server** in `tools/mcp-chip8/` with handler tests and a Vite bundle script. _R11_
-- [ ] 6. **Register the server** in `.kiro/settings/mcp.json`. _R12_
+- [x] 6. **Register the server** in `.kiro/settings/mcp.json`. _R12_
 - [x] 7. **Write `.kiro/steering/octo-cheatsheet.md`** and `tests/compiler/cheatsheet.test.ts`. _R13_
 - [x] 8. **Check the hook** covers `examples/**` and `src/emulator/**`, and extend its command to the harness and compiler tests. _R14_
 - [x] 9. **Update `docs/BUILD_LOG.md`.** _R15_

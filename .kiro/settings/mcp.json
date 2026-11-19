@@ -1,0 +1,1 @@
+{"mcpServers":{"chip8":{"command":"node","args":["tools/mcp-chip8/dist/server.mjs"],"disabled":false}}}
