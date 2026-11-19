@@ -126,23 +126,23 @@ Reasons: `getStatus().reason` is a structured object (not just a string). A help
 | ROM | the authored test ROM | `rom.test.ts` |
 | UI | key map | `tests/ui/keymap.test.ts` |
 
-## Quirk set (OPEN FLAG)
+## Quirk set (CLOSED in spec 2)
 
-**This choice is open and must be reconciled with the Octo compiler defaults when Octo is vendored in spec 2.** Generated games are compiled by Octo and then run by this emulator and by "any independent CHIP-8 emulator" (steering section 12), so the emulator and Octo must agree. The steering file asks us to "match what the Octo compiler expects". The planner could not read the Octo source in this step, so the values below follow what is known about Octo's default options (all of its quirk options are off by default, which gives the original COSMAC VIP-style behavior except for wrapping and logic flags). **Spec 2 must verify each row against the vendored Octo version and change the default in `DEFAULT_QUIRKS` if it differs.** Because quirks are a typed config, that change touches one object, not opcode logic.
+**Closed in spec 2 (`compiler-and-harness`).** The vendored Octo (John Earnest, MIT, commit `76f816c`) was read and each row was checked against Octo's own emulator (`js/emulator.js`) with all of its quirk options off, which is Octo's default. All seven values already matched, so no default changed. Octo's shift option off means VX = VY shifted, load/store option off means I += X + 1, jump option off means V0 is added, logic option off leaves VF alone, clip option off wraps sprite pixels, `FX0A` completes on key release, and `writeCarry` writes VF after VX. `tests/compiler/octo-quirks.test.ts` compiles Octo programs and runs them here to pin each row. Differences that are not quirks: Octo's call stack holds 12 entries (ours 16), and Octo draws a 16x16 SUPER-CHIP sprite for N = 0 (ours draws nothing), so the `compile()` wrapper rejects SUPER-CHIP and XO-CHIP programs.
 
 | Quirk | Chosen default | Reason |
 |---|---|---|
 | Shift (`8XY6/8XYE`) | `shiftUsesVy: true`. VX = VY shifted, VF = shifted-out bit | Original CHIP-8 semantics, and Octo's default (its "shift quirks" option is off). Games written for Octo expect this. |
 | Load/store (`FX55/FX65`) | `loadStoreIncrementsI: true`. I += X + 1 | Original semantics, Octo default (load/store quirks off). Octo programs that stream data through `save`/`load` rely on it. |
 | Jump (`BNNN`) | `jumpUsesVx: false`. PC = NNN + V0 | Original semantics, Octo default (`jump0` quirk off). |
-| VF reset (`8XY1/2/3`) | `logicResetsVf: false`. VF is left unchanged | Octo's default (logic quirk off). Modern ROMs and Octo output do not depend on the reset. Note the original VIP resets VF, so this one differs from the VIP. Verify in spec 2. |
-| Sprite clipping/wrapping | `spriteWrap: true`. Pixels wrap; start coordinates always wrap | Octo's default (clip quirk off), and generated games benefit from wrapping since the LLM often draws near edges. Differs from the VIP, which clips. Verify in spec 2. |
-| `FX0A` | `waitKeyOnRelease: true` | Original VIP behavior, and Octo's `key` wait behavior. Verify in spec 2. |
+| VF reset (`8XY1/2/3`) | `logicResetsVf: false`. VF is left unchanged | Octo's default (logic quirk off). Modern ROMs and Octo output do not depend on the reset. Note the original VIP resets VF, so this one differs from the VIP. |
+| Sprite clipping/wrapping | `spriteWrap: true`. Pixels wrap; start coordinates always wrap | Octo's default (clip quirk off), and generated games benefit from wrapping since the LLM often draws near edges. Differs from the VIP, which clips. |
+| `FX0A` | `waitKeyOnRelease: true` | Original VIP behavior, and Octo's `key` wait behavior. |
 | Flag ordering | `flagWrittenLast: true`. VF wins when X = 0xF | Matches Octo's default order; avoids ambiguity in `8FY4`-style code. |
 
 Other fixed behavior (not configurable): `7XNN` sets no flag, `FX1E` sets no flag, `DXYN` with N = 0 draws nothing, `0NNN` is unknown.
 
-The top-of-file comment in `chip8.ts` lists this same table with the reasons, and says "Reconcile with Octo defaults in spec 2."
+The top-of-file comment in `chip8.ts` lists this same table with the reasons, and records that it was reconciled with Octo in spec 2.
 
 ## Authored test ROM (`testRom.ts`)
 

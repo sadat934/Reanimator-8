@@ -3,8 +3,13 @@
  *
  * QUIRKS (defaults live in DEFAULT_QUIRKS in types.ts and can be overridden per machine)
  * ------------------------------------------------------------------------------------
- * RECONCILE WITH OCTO IN SPEC 2: ROMs are compiled by Octo, so every default below must
- * be checked against the vendored Octo version and changed if it differs.
+ * RECONCILED WITH OCTO (spec 2): ROMs are compiled by the vendored Octo (src/compiler).
+ * Every default below was checked against Octo's own emulator (js/emulator.js, commit
+ * 76f816c, all quirk options off) and matches it. tests/compiler/octo-quirks.test.ts
+ * compiles Octo programs and runs them here to keep it that way.
+ * Known differences that are not quirks: Octo's call stack holds 12 entries (ours 16),
+ * and Octo draws a 16x16 SUPER-CHIP sprite for N = 0 (ours draws nothing); the compile()
+ * wrapper rejects SUPER-CHIP and XO-CHIP programs for that reason.
  *
  * Shift (8XY6, 8XYE): shiftUsesVy = true.
  *   VX = VY shifted by one, VF = the bit shifted out. Original CHIP-8 semantics and the

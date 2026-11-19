@@ -26,7 +26,11 @@ export type Quirks = {
   flagWrittenLast: boolean;
 };
 
-/** OPEN FLAG: reconcile every value with the vendored Octo defaults in spec 2. */
+/**
+ * Reconciled with the vendored Octo in spec 2 (compiler-and-harness): all seven values equal
+ * what Octo's own emulator does with every quirk option off. Pinned by
+ * tests/compiler/octo-quirks.test.ts.
+ */
 export const DEFAULT_QUIRKS: Readonly<Quirks> = {
   shiftUsesVy: true,
   loadStoreIncrementsI: true,

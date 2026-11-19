@@ -8,7 +8,7 @@ Source of truth: `.kiro/steering/reanimator.md` (sections 2, 3, 4, 5, 13).
 
 ## Assumptions
 
-- A1. Octo is vendored later (spec 2). This spec does not include any Octo code. The quirk set is chosen here but flagged for reconciliation (see design, "Quirk set (OPEN FLAG)").
+- A1. Octo is vendored later (spec 2). This spec does not include any Octo code. The quirk set is chosen here and was reconciled with Octo in spec 2 (see design, "Quirk set (CLOSED in spec 2)").
 - A2. Everything runs locally. No hosting, serverless, or deployment work.
 - A3. The CRT shader, audio, LLM code, harness, compiler, and gallery are out of scope. A plain 2D canvas is used.
 - A4. "Deterministic" means: the same ROM, the same configuration, and the same sequence of API calls always produce the same state. No `Math.random` or wall-clock reads inside the core. `CXNN` uses an injectable seeded PRNG.
@@ -102,7 +102,7 @@ Source of truth: `.kiro/steering/reanimator.md` (sections 2, 3, 4, 5, 13).
 7. After `loadRom(rom)` and N `runFrame()` calls, two separate machines produce byte-identical `getDisplay()` and `getStatus()`.
 8. `getDisplay()` returns a new array each call; mutating it does not change the next result.
 9. The top of `src/emulator/chip8.ts` has a quirks comment naming each choice in R21 and a reason.
-10. The design file contains a section titled "Quirk set (OPEN FLAG)" that mentions the Octo reconciliation in spec 2.
+10. The design file contains a section titled "Quirk set (CLOSED in spec 2)" that mentions the Octo reconciliation in spec 2.
 11. The test ROM's headless test asserts the exact lit-pixel pattern for at least two different key sequences.
 12. `.env.example` contains every variable in R36 with empty or placeholder values. `git grep` finds no real key patterns.
 13. `THIRD_PARTY.md`, `docs/BUILD_LOG.md` (dated entry), and the hook file exist. The hook's patterns include `examples/**` and `src/emulator/**`.
