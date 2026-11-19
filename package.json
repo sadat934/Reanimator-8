@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
+    "llm:try": "vite build --config tools/try-llm/vite.config.ts --logLevel error && node --env-file-if-exists=.env tools/try-llm/dist/try-llm.mjs",
     "mcp:build": "vite build --config tools/mcp-chip8/vite.config.ts"
   },
   "devDependencies": {

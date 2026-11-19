@@ -57,3 +57,17 @@ Dated record of what was built, which Kiro features were used, and what was chan
 - Hook command widened from tests/emulator to tests/emulator tests/harness tests/compiler so saving an example runs the example test.
 **User action**
 - A permission rule blocks agent writes to .kiro/settings/, so the user created .kiro/settings/mcp.json by hand (server `chip8`, command `node`, args `tools/mcp-chip8/dist/server.mjs`). Run `npm run mcp:build` first to produce the bundle.
+
+## 2026-11-19: spec 3, llm-provider-layer
+**What was built**
+- src/llm/: LLMProvider interface (section 6), Gemini, Mistral and Groq providers over plain fetch, a fallback chain ordered by LLM_PROVIDER, and a config module. Model names come from env only. Keys are read server-side only and scrubbed from every error and failure reason.
+- generate() on the chain returns the text, the serving provider, earlier failures with reasons and the skipped providers. If all fail or no key is set it throws AllProvidersFailedError with "The ghost is resting. Try the gallery." plus the failure list.
+- tools/try-llm and npm run llm:try: sends one prompt through the chain using keys from a local .env, never prints keys, says clearly when none are set.
+- tests/llm/provider.test.ts: mocked fetch only, no network.
+- .kiro/specs/llm-provider-layer/: requirements, design, tasks.
+**Decision**
+- No mock provider in the runtime chain (user decision, overrides the earlier idea of a mock fallback). Mocks exist only inside Vitest tests. No canned program is ever returned as if generated.
+**Deviations**
+- No third-party additions, so THIRD_PARTY.md is unchanged. A provider with a key but no model variable is a recorded failure, not a skip.
+**User action**
+- Copy .env.example to .env, add the three API keys and check model names, then run npm run llm:try.
