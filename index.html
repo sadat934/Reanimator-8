@@ -3,29 +3,91 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>The Reanimator: CHIP-8 emulator</title>
-    <style>
-      body { background: #050a06; color: #9fe8b0; font-family: ui-monospace, Consolas, monospace; margin: 0; padding: 1.5rem; }
-      h1 { font-size: 1.1rem; margin: 0 0 0.5rem; }
-      #screen { width: 640px; max-width: 100%; aspect-ratio: 2 / 1; image-rendering: pixelated; background: #001a08; border: 2px solid #1d5c33; display: block; }
-      #status { margin: 0.75rem 0; white-space: pre-wrap; min-height: 1.5em; }
-      table { border-collapse: collapse; margin-top: 0.5rem; }
-      td { border: 1px solid #1d5c33; padding: 0.25rem 0.6rem; text-align: center; }
-      p { max-width: 40rem; }
-    </style>
+    <title>The Reanimator: speak a game into the CRT</title>
   </head>
   <body>
-    <h1>The Reanimator: CHIP-8 emulator</h1>
-    <p>Test ROM: click the page, then press a mapped key. The key's hex digit is drawn after you release it.</p>
-    <canvas id="screen" width="64" height="32" aria-label="CHIP-8 display"></canvas>
-    <div id="status" role="status" aria-live="polite"></div>
-    <table aria-label="Keyboard mapping">
-      <caption>Keyboard mapping (CHIP-8 key = keyboard key)</caption>
-      <tr><td>1 = 1</td><td>2 = 2</td><td>3 = 3</td><td>C = 4</td></tr>
-      <tr><td>4 = Q</td><td>5 = W</td><td>6 = E</td><td>D = R</td></tr>
-      <tr><td>7 = A</td><td>8 = S</td><td>9 = D</td><td>E = F</td></tr>
-      <tr><td>A = Z</td><td>0 = X</td><td>B = C</td><td>F = V</td></tr>
-    </table>
+    <main class="app">
+      <header class="app__header">
+        <h1>The Reanimator</h1>
+        <p class="tagline">
+          Describe a game in one sentence. A model writes it in Octo, our own emulator tests it, and
+          the CRT plays it. Or wake one of the pre-generated games below.
+        </p>
+      </header>
+
+      <div class="layout">
+        <section class="layout__stage" aria-labelledby="crt-heading">
+          <h2 id="crt-heading" class="visually-hidden">CRT screen and controls</h2>
+          <div class="crt" id="crt">
+            <canvas id="screen" width="64" height="32" aria-label="CHIP-8 display"></canvas>
+            <canvas id="lightning" aria-hidden="true"></canvas>
+            <p id="crt-hint" class="crt__hint">No game loaded. Pick one from the gallery or speak an incantation.</p>
+            <p id="badge" class="crt__badge" hidden>Reanimating...</p>
+          </div>
+          <p class="game-info" id="game-info">
+            <span id="game-title" class="game-info__title">Nothing loaded</span>
+            <span id="game-label" class="badge" hidden></span>
+            <span id="game-note" class="note"></span>
+          </p>
+          <p id="status" class="status">no game loaded</p>
+
+          <div class="controls" role="group" aria-label="Game controls">
+            <button type="button" id="pause" aria-pressed="false">Pause</button>
+            <button type="button" id="reset">Reset</button>
+            <div class="speed">
+              <label for="speed">Speed</label>
+              <input type="range" id="speed" min="1" max="60" value="12" aria-describedby="speed-value" />
+              <output id="speed-value" for="speed">12</output>
+              <span class="note">instructions per frame</span>
+            </div>
+          </div>
+          <div class="controls" role="group" aria-label="Game actions">
+            <button type="button" id="download" disabled>Download ROM (.ch8)</button>
+            <button type="button" id="copy" disabled>Copy Octo source</button>
+            <button type="button" id="sound" aria-pressed="false">Sound <span id="sound-state" aria-hidden="true">off</span></button>
+          </div>
+          <p id="action-status" class="action-status" role="status"></p>
+        </section>
+
+        <div class="layout__side">
+          <section class="panel" aria-labelledby="spell-heading">
+            <h2 id="spell-heading">Spell</h2>
+            <form id="spell" autocomplete="off">
+              <label for="prompt">Speak the incantation</label>
+              <textarea id="prompt" name="prompt" maxlength="200" placeholder="a ball bouncing between two paddles"></textarea>
+              <div class="spell__row">
+                <span id="prompt-count" class="counter" aria-live="polite">0 / 200</span>
+                <button type="submit" id="submit" class="button--primary">Reanimate</button>
+              </div>
+              <p id="alert" class="alert" role="alert"></p>
+            </form>
+          </section>
+
+          <section class="panel" aria-labelledby="log-heading">
+            <h2 id="log-heading">Terminal</h2>
+            <div id="log" class="log" role="log" aria-live="polite" aria-label="Reanimation log">
+              <p class="log__empty">Waiting for an incantation.</p>
+            </div>
+          </section>
+
+          <section class="panel" aria-labelledby="gallery-heading">
+            <h2 id="gallery-heading">Gallery</h2>
+            <ul id="gallery" class="gallery"></ul>
+          </section>
+
+          <section class="panel" aria-labelledby="keys-heading">
+            <h2 id="keys-heading">Keys</h2>
+            <table>
+              <caption>Keyboard mapping (CHIP-8 key = keyboard key)</caption>
+              <tr><td>1 = 1</td><td>2 = 2</td><td>3 = 3</td><td>C = 4</td></tr>
+              <tr><td>4 = Q</td><td>5 = W</td><td>6 = E</td><td>D = R</td></tr>
+              <tr><td>7 = A</td><td>8 = S</td><td>9 = D</td><td>E = F</td></tr>
+              <tr><td>A = Z</td><td>0 = X</td><td>B = C</td><td>F = V</td></tr>
+            </table>
+          </section>
+        </div>
+      </div>
+    </main>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

@@ -1,8 +1,4 @@
-import { TEST_ROM } from './emulator';
-import { startRenderer } from './ui/renderer';
+import './ui/styles.css';
+import { startApp } from './ui/app';
 
-const canvas = document.getElementById('screen');
-const statusEl = document.getElementById('status');
-if (canvas instanceof HTMLCanvasElement && statusEl) {
-  startRenderer({ canvas, statusEl, rom: TEST_ROM });
-}
+startApp(document.body);
