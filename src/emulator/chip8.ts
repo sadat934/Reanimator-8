@@ -77,9 +77,11 @@ export class Chip8 {
   private latchedKey = -1;
   private opPc = PROGRAM_START;
   private rom: Uint8Array | null = null;
+  private cyclesPerFrame: number;
 
   constructor(config: Partial<Chip8Config> = {}) {
     this.config = resolveConfig(config);
+    this.cyclesPerFrame = this.config.cyclesPerFrame;
     this.rng = new Rng(this.config.seed);
     this.resetState();
   }
@@ -102,6 +104,14 @@ export class Chip8 {
     this.resetState();
   }
 
+  /** Changes the instructions run per frame without touching any machine state. */
+  setCyclesPerFrame(n: number): void {
+    if (!Number.isInteger(n) || n < 1 || n > 1000) {
+      throw new RangeError('cyclesPerFrame must be an integer from 1 to 1000');
+    }
+    this.cyclesPerFrame = n;
+  }
+
   /** Executes one instruction. Does not tick timers. */
   step(): void {
     if (this.crash) return;
@@ -121,7 +131,7 @@ export class Chip8 {
   /** Runs cyclesPerFrame instructions, then ticks both timers once. */
   runFrame(): void {
     if (this.crash) return;
-    for (let c = 0; c < this.config.cyclesPerFrame; c++) {
+    for (let c = 0; c < this.cyclesPerFrame; c++) {
       this.step();
       if (this.crash) return;
     }

@@ -114,3 +114,32 @@ describe('getDisplay and getStatus return copies', () => {
     expect(m.getStatus().reason).not.toBe(s.reason);
   });
 });
+
+describe('setCyclesPerFrame', () => {
+  it('changes the number of instructions run per frame without resetting state', () => {
+    const m = machine([0x6001, 0x7001, 0x1202], { cyclesPerFrame: 2 });
+    m.runFrame();
+    expect(m.getStatus().cycles).toBe(2);
+    m.setCyclesPerFrame(5);
+    m.runFrame();
+    expect(m.getStatus().cycles).toBe(7);
+    expect(m.getStatus().frames).toBe(2);
+  });
+
+  it('rejects 0, 1.5, 1001 and NaN with RangeError and keeps the old value', () => {
+    const m = machine([0x1200], { cyclesPerFrame: 3 });
+    for (const bad of [0, 1.5, 1001, Number.NaN]) {
+      expect(() => m.setCyclesPerFrame(bad)).toThrow(RangeError);
+    }
+    m.runFrame();
+    expect(m.getStatus().cycles).toBe(3);
+  });
+
+  it('accepts the bounds 1 and 1000', () => {
+    const m = machine([0x1200]);
+    m.setCyclesPerFrame(1);
+    m.setCyclesPerFrame(1000);
+    m.runFrame();
+    expect(m.getStatus().cycles).toBe(1000);
+  });
+});
