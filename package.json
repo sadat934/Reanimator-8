@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit",
     "llm:try": "vite build --config tools/try-llm/vite.config.ts --logLevel error && node --env-file-if-exists=.env tools/try-llm/dist/try-llm.mjs",
     "reanimate": "vite build --config tools/reanimate-cli/vite.config.ts --logLevel error && node --env-file-if-exists=.env tools/reanimate-cli/dist/reanimate-cli.mjs",
+    "gallery:placeholders": "vite build --config tools/gallery-placeholders/vite.config.ts --logLevel error && node tools/gallery-placeholders/dist/gallery-placeholders.mjs",
     "mcp:build": "vite build --config tools/mcp-chip8/vite.config.ts"
   },
   "devDependencies": {
