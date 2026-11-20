@@ -14,3 +14,5 @@ The CHIP-8 emulator, font glyphs, and test ROM are written from scratch for this
 Transitive npm packages are installed from the registry under their own licenses (see `package-lock.json`).
 
 The vendored file `src/compiler/octo-compiler.js` has one change from upstream, documented in its header: the last line became an ES module export. `src/compiler/compile.ts` and `octo-compiler.d.ts` are our own.
+
+No new third-party items in spec 5 (crt-ui): the shader, CSS, lightning and audio code are written for this project, and the UI uses system fonts only.

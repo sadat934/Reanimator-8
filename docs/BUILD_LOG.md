@@ -94,3 +94,24 @@ Dated record of what was built, which Kiro features were used, and what was chan
 - "The ghost is resting. Try the gallery." now appears only when even the mock cannot serve.
 - Tests (mocked fetch only): all providers fail or keyless gives the mock, flagged; a real success does not use it; the mock source compiles and passes the harness; the loop labels it honestly.
 - Specs for llm-provider-layer and reanimate-loop, .env.example and the two CLIs updated. The earlier entries above are left as written.
+
+## 2026-11-20: spec 5, crt-ui
+**What was built**
+- Page: semantic `index.html`, `src/ui/app.ts` wiring, `src/ui/styles.css` (system fonts, focus outlines, one column under 800 px, reduced-motion rules). The old plain renderer is gone.
+- CRT: `src/ui/crt.ts` WebGL 1 shader written for this project (curvature, glow, scanlines, phosphor tint, vignette, flicker) with a 2D canvas plus CSS fallback (`?renderer=css` or no WebGL). `src/ui/lightning.ts` draws procedural bolts while generating; with reduced motion nothing animates and a static "Reanimating..." badge shows.
+- `src/ui/player.ts`: 60 Hz loop, pause, reset, speed, keys (ignored while typing in form fields), buzzer hook.
+- Earlier in this spec (items 1 to 6): shared contract `src/shared/api.ts` and `docs/API.md`, dev API as a Vite plugin (`POST /api/generate`, NDJSON), pure labels, state machine and NDJSON client, audio controller (muted by default), gallery loader with two placeholder entries, no-secrets scan of `src/ui`.
+- `tools/browser-check/check.mjs`: drives headless Edge over the DevTools protocol, 39 assertions, seven screenshots in `docs/screenshots/`.
+- `.kiro/specs/crt-ui/`: requirements, design, tasks (review step left unticked).
+**Kiro features used**
+- Spec (requirements, design, tasks) and steering (reanimator.md sections 2 and 9). The earlier hook on `src/emulator/` still guards the emulator change.
+**Checks run**
+- `npm install`, `npx tsc --noEmit`, `npx vitest run` (30 files, 299 tests), `npm run build`: all exit 0.
+- Browser check against the dev server on port 5199 with empty provider keys and `DEV_API_DELAY_MS=500`: 39 of 39 assertions passed, no console errors. It covers a gallery game lighting pixels and answering keys (basket moves with Q and E in the CSS renderer), pause and reset, the offline label "offline stand-in, not generated just now" after a Reanimate run, Download and Copy enabled afterward, reduced motion (no lightning), the CSS fallback and a 390 px layout.
+**Deviations**
+- `Chip8.setCyclesPerFrame` was added so the speed slider does not need a new machine.
+- The dev API is a stand-in for spec 6's serverless function. It shares the same handler shape, so spec 6 can wrap it.
+- Gallery holds two hand-written placeholder entries (titles start with "[placeholder]", each carries a note saying so). The 8 or more real entries are spec 6.
+- The browser check waits for the basket to settle because headless Edge sometimes runs the emulator slowly. It was flaky with fixed delays before that change.
+**Changed by hand**
+- Nothing. `.kiro/settings/` was not touched.
